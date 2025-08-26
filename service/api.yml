@@ -1,0 +1,346 @@
+openapi: 3.0.3
+info:
+  title: Simple POS Service API
+  version: 1.0.0
+  description: OpenAPI 3.0 specification for Menu endpoints.
+servers:
+  - url: /
+paths:
+  /api/menus:
+    get:
+      tags: [Menus]
+      summary: List menus
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: A list of menus
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MenuResponse'
+    post:
+      tags: [Menus]
+      summary: Create a menu
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMenuRequest'
+      responses:
+        '200':
+          description: Menu created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuResponse'
+  /api/menus/{menuId}:
+    get:
+      tags: [Menus]
+      summary: Get menu by ID
+      parameters:
+        - $ref: '#/components/parameters/menuId'
+        - $ref: '#/components/parameters/include'
+      responses:
+        '200':
+          description: The menu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuResponse'
+        '404':
+          description: Menu not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags: [Menus]
+      summary: Update a menu
+      parameters:
+        - $ref: '#/components/parameters/menuId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMenuRequest'
+      responses:
+        '200':
+          description: Updated menu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuResponse'
+        '404':
+          description: Menu not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags: [Menus]
+      summary: Delete a menu
+      parameters:
+        - $ref: '#/components/parameters/menuId'
+      responses:
+        '204':
+          description: Menu deleted
+        '404':
+          description: Menu not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/menus/{menuId}/items:
+    get:
+      tags: [Menu Items]
+      summary: List items for a menu
+      parameters:
+        - $ref: '#/components/parameters/menuId'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: A list of menu items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MenuItemResponse'
+        '404':
+          description: Menu not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags: [Menu Items]
+      summary: Create a menu item
+      parameters:
+        - $ref: '#/components/parameters/menuId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMenuItemRequest'
+      responses:
+        '200':
+          description: Menu item created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuItemResponse'
+        '404':
+          description: Menu not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/menus/{menuId}/items/{id}:
+    get:
+      tags: [Menu Items]
+      summary: Get menu item by ID
+      parameters:
+        - $ref: '#/components/parameters/menuId'
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: The menu item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuItemResponse'
+        '404':
+          description: Menu item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags: [Menu Items]
+      summary: Update a menu item
+      parameters:
+        - $ref: '#/components/parameters/menuId'
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMenuItemRequest'
+      responses:
+        '200':
+          description: Updated menu item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuItemResponse'
+        '404':
+          description: Menu item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags: [Menu Items]
+      summary: Delete a menu item
+      parameters:
+        - $ref: '#/components/parameters/menuId'
+        - $ref: '#/components/parameters/id'
+      responses:
+        '204':
+          description: Menu item deleted
+        '404':
+          description: Menu item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  parameters:
+    menuId:
+      name: menuId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      description: ID of the menu
+    id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      description: ID of the menu item
+    limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+      description: Max number of items to return (1-100)
+    offset:
+      name: offset
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+      description: Number of items to skip
+    include:
+      name: include
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [items, all]
+      description: Include related entities; items includes MenuItems, all includes all relations
+  schemas:
+    CreateMenuRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+      required: [name]
+      additionalProperties: false
+    UpdateMenuRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+      additionalProperties: false
+    MenuResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MenuItemResponse'
+      required: [id, name]
+      additionalProperties: false
+    CreateMenuItemRequest:
+      type: object
+      properties:
+        menuId:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        costCents:
+          type: integer
+          minimum: 1
+      required: [menuId, name, costCents]
+      additionalProperties: false
+    UpdateMenuItemRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        costCents:
+          type: integer
+          minimum: 1
+      additionalProperties: false
+    MenuItemResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        menuId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        costCents:
+          type: integer
+        cost:
+          type: number
+          format: float
+          description: Derived dollars from costCents
+        recipeId:
+          type: integer
+          nullable: true
+      required: [id, menuId, name, costCents, cost]
+      additionalProperties: false
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+      additionalProperties: true
