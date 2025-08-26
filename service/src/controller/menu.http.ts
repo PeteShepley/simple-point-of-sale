@@ -41,10 +41,12 @@ function toMenuItemResponse(i: MenuItem): MenuItemResponse {
   };
 }
 
+@http.controller("/api/menus")
 export class MenuController {
   constructor(private db: MenuDatabase) {}
 
-  @http.GET("/api/menus")
+  @http.OPTIONS("")
+  @http.GET("")
   async list(query: HttpQueries<PaginationQuery>) {
     const limit = Math.min(Math.max(query.limit ?? 25, 1), 100);
     const offset = Math.max(query.offset ?? 0, 0);
@@ -53,7 +55,8 @@ export class MenuController {
     return items.map((m) => toMenuResponse(m));
   }
 
-  @http.GET("/api/menus/:menuId")
+  @http.OPTIONS("/:menuId")
+  @http.GET("/:menuId")
   async detail(menuId: number, include?: HttpQuery<IncludeParam>) {
     const session = this.db.createSession();
     const menu = await session
@@ -68,7 +71,8 @@ export class MenuController {
     return toMenuResponse(menu);
   }
 
-  @http.POST("/api/menus")
+  @http.OPTIONS("")
+  @http.POST("")
   async create(body: HttpBody<CreateMenuRequest>) {
     const session = this.db.createSession();
     const menu = new Menu();
@@ -80,7 +84,8 @@ export class MenuController {
     return toMenuResponse(menu);
   }
 
-  @http.PUT("/api/menus/:menuId")
+  @http.OPTIONS("/:menuId")
+  @http.PUT("/:menuId")
   async update(menuId: number, body: HttpBody<UpdateMenuRequest>) {
     const session = this.db.createSession();
     const menu = await session
@@ -94,7 +99,8 @@ export class MenuController {
     return toMenuResponse(menu);
   }
 
-  @http.DELETE("/api/menus/:menuId")
+  @http.OPTIONS("/:menuId")
+  @http.DELETE("/:menuId")
   async remove(menuId: number) {
     const session = this.db.createSession();
     const menu = await session
@@ -107,7 +113,8 @@ export class MenuController {
   }
 
   // Menu Items
-  @http.GET("/api/menus/:menuId/items")
+  @http.OPTIONS("/:menuId/items")
+  @http.GET("/:menuId/items")
   async listItems(menuId: number, query?: HttpQueries<PaginationQuery>) {
     const limit = Math.min(Math.max(query?.limit ?? 25, 1), 100);
     const offset = Math.max(query?.offset ?? 0, 0);
@@ -125,7 +132,8 @@ export class MenuController {
     return rows.map(toMenuItemResponse);
   }
 
-  @http.GET("/api/menus/:menuId/items/:id")
+  @http.OPTIONS("/:menuId/items/:id")
+  @http.GET("/:menuId/items/:id")
   async itemDetail(id: number) {
     const session = this.db.createSession();
     const item = await session
@@ -136,7 +144,8 @@ export class MenuController {
     return toMenuItemResponse(item);
   }
 
-  @http.POST("/api/menus/:menuId/items")
+  @http.OPTIONS("/:menuId/items")
+  @http.POST("/:menuId/items")
   async createItem(menuId: number, body: HttpBody<CreateMenuItemRequest>) {
     const session = this.db.createSession();
     const menu = await session
@@ -155,7 +164,8 @@ export class MenuController {
     return toMenuItemResponse(item);
   }
 
-  @http.PUT("/api/menus/:menuId/items/:id")
+  @http.OPTIONS("/:menuId/items/:id")
+  @http.PUT("/:menuId/items/:id")
   async updateItem(
     menuId: number,
     id: number,
@@ -174,7 +184,8 @@ export class MenuController {
     return toMenuItemResponse(item);
   }
 
-  @http.DELETE("/api/menus/:menuId/items/:id")
+  @http.OPTIONS("/:menuId/items/:id")
+  @http.DELETE("/:menuId/items/:id")
   async deleteItem(menuId: number, id: number) {
     const session = this.db.createSession();
     const item = await session

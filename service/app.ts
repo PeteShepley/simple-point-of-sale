@@ -1,3 +1,4 @@
+import cors from "cors";
 import { App } from "@deepkit/app";
 import { FrameworkModule } from "@deepkit/framework";
 import { JSONTransport, Logger } from "@deepkit/logger";
@@ -5,12 +6,14 @@ import { AppConfig } from "./src/app/config";
 import { MenuController } from "./src/controller/menu.http";
 import { RecipeController } from "./src/controller/recipe.http";
 import { MenuDatabase } from "./src/data/database";
+import { httpMiddleware } from "@deepkit/http";
 
 async function main(): Promise<void> {
   const application = new App({
     config: AppConfig,
     controllers: [MenuController, RecipeController],
     providers: [MenuDatabase],
+    middlewares: [httpMiddleware.for(cors())],
     imports: [
       new FrameworkModule({
         migrateOnStartup: true,

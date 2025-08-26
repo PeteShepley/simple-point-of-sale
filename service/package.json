@@ -37,10 +37,12 @@
     "@deepkit/template": "^1.0.1",
     "@deepkit/type": "^1.0.1",
     "@deepkit/workflow": "^1.0.1",
+    "cors": "^2.8.5",
     "prettier": "^3.6.2"
   },
   "devDependencies": {
     "@deepkit/type-compiler": "^1.0.1",
+    "@types/cors": "^2.8.19",
     "@types/jest": "^29.5.11",
     "faker": "^5.5.3",
     "jest": "^29.5.0",
