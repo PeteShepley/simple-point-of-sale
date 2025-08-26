@@ -1,33 +1,42 @@
-import { App } from '@deepkit/app';
-import { FrameworkModule } from '@deepkit/framework';
-import { JSONTransport, Logger } from '@deepkit/logger';
+import { App } from "@deepkit/app";
+import { FrameworkModule } from "@deepkit/framework";
+import { JSONTransport, Logger } from "@deepkit/logger";
+import { AppConfig } from "./src/app/config";
+import { MenuController } from "./src/controller/menu.http";
+import { RecipeController } from "./src/controller/recipe.http";
+import { MenuDatabase } from "./src/data/database";
 
-import { HelloWorldControllerCli } from './src/controller/hello-world.cli';
-import { HelloWorldControllerHttp } from './src/controller/hello-world.http';
-import { HelloWorldControllerRpc } from './src/controller/hello-world.rpc';
-import { Service } from './src/app/service';
-import { AppConfig } from './src/app/config';
-
-new App({
+async function main(): Promise<void> {
+  const application = new App({
     config: AppConfig,
-    controllers: [
-        HelloWorldControllerCli,
-        HelloWorldControllerHttp,
-        HelloWorldControllerRpc,
+    controllers: [MenuController, RecipeController],
+    providers: [MenuDatabase],
+    imports: [
+      new FrameworkModule({
+        migrateOnStartup: true,
+        debug: true,
+      }),
     ],
-    providers: [
-        Service,
-    ],
-    imports: [new FrameworkModule({ debug: true })]
-})
-    .loadConfigFromEnv({ envFilePath: ['production.env', '.env'] })
-    .setup((module, config: AppConfig) => {
-        if (config.environment === 'production') {
-            //enable logging JSON messages instead of formatted strings
-            module.configureProvider<Logger>(v => v.setTransport([new JSONTransport]));
+  });
 
-            //disable debugging
-            module.getImportedModuleByClass(FrameworkModule).configure({debug: false});
-        }
-    })
-    .run();
+  application.loadConfigFromEnv({ envFilePath: ["production.env", ".env"] });
+
+  application.setup(async (module, config: AppConfig) => {
+    if (config.environment === "production") {
+      //enable logging JSON messages instead of formatted strings
+      module.configureProvider<Logger>((loggerProvider) =>
+        loggerProvider.setTransport([new JSONTransport()]),
+      );
+
+      module
+        .getImportedModuleByClass(FrameworkModule)
+        .configure({ migrateOnStartup: false, debug: false });
+    }
+  });
+
+  return application.run();
+}
+
+main()
+  .then(() => console.log("Done."))
+  .catch(console.error);

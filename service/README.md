@@ -1,6 +1,6 @@
-# App
+# Service App
 
-Welcome to your new Deepkit app.
+This service exposes a REST API for a Menu domain (menus, menu-items, recipes, ingredients, steps) backed by a local SQLite database.
 
 ## Start server
 
@@ -53,11 +53,22 @@ $ ./app.ts server:start
 
 ### HTTP
 
-An example HTTP controller is at `./src/controller/hello-world.http.ts` which can be accessed by any HTTP client, after starting the server with `npm run app server:start`:
+New REST endpoints (examples):
 
-```sh
-$ curl -v http://localhost:8080/hello/world
-```
+- Menus
+  - List: curl -s http://localhost:8080/api/menus
+  - Create: curl -s -X POST http://localhost:8080/api/menus -H 'content-type: application/json' -d '{"name":"Lunch"}'
+  - Detail (with items): curl -s 'http://localhost:8080/api/menus/1?include=items'
+- Menu Items
+  - List for menu: curl -s 'http://localhost:8080/api/menu-items?menuId=1'
+  - Create: curl -s -X POST http://localhost:8080/api/menu-items -H 'content-type: application/json' -d '{"menuId":1,"name":"Burger","costCents":1299}'
+- Recipes
+  - Create: curl -s -X POST http://localhost:8080/api/recipes -H 'content-type: application/json' -d '{"name":"Burger"}'
+  - Detail with all: curl -s 'http://localhost:8080/api/recipes/1?include=all'
+- Ingredients
+  - Create: curl -s -X POST http://localhost:8080/api/ingredients -H 'content-type: application/json' -d '{"recipeId":1,"name":"Beef","amount":1,"unit":"lb"}'
+- Method Steps
+  - Create: curl -s -X POST http://localhost:8080/api/steps -H 'content-type: application/json' -d '{"recipeId":1,"order":1,"instruction":"Grill patty"}'
 
 ### RPC
 
@@ -77,6 +88,13 @@ If you want to work on some server APIs and the server should restart automatica
 ```sh
 $ npm run app:watch server:start
 ```
+
+## Database & Migrations
+
+- Local DB file: service/var/data.sqlite (ignored by git via root .gitignore)
+- Override DB path with env: APP_DB_PATH=/absolute/or/relative/path.sqlite
+- Auto-migrate: In development, the app attempts to auto-sync the schema on startup.
+- Production migration: run `npm run db:migrate` before starting the server.
 
 ## Deploy
 
