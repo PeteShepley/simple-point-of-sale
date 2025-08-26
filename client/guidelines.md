@@ -9,7 +9,7 @@ Scope: Focused on the client/ workspace which contains a React + TypeScript appl
 
 - Workspace layout
   - client/: React app (Vite, TS, ESLint). The service/ directory is separate and not covered here.
-  - Entry points: index.html (HTML shell), src/main.tsx (bootstraps React), src/App.tsx (root component).
+  - Entry points: index.html (HTML shell), src/main.tsx (bootstraps React), src/App.tsx (root component and routes).
 
 - Toolchain
   - React 19 with react-dom 19.
@@ -136,5 +136,101 @@ Appendix: Frequently Used Commands
 - Watch tests: npm run test:watch
 - Coverage: npm run test:coverage
 
+4. Redux and Redux Toolkit Usage
+
+- Overview
+  - We use Redux Toolkit (RTK) for global state management. RTK provides opinionated defaults, immutable updates via Immer, and built-in thunk middleware.
+  - React bindings are provided by react-redux.
+
+- Store location and setup
+  - Store is created in src/store/index.ts using configureStore.
+  - Provider is wired in src/main.tsx:
+    import { Provider } from 'react-redux'
+    import { store } from './store'
+    ;<Provider store={store}> <App /> </Provider>
+  - Typed utilities in src/store/hooks.ts:
+    - useAppDispatch and useAppSelector should be used instead of raw useDispatch/useSelector.
+
+- Environment configuration for API calls
+  - API base URL can be provided via VITE_API_BASE (or VITE_API_BASE_URL). If unset, API helper will use relative paths like /api/menus.
+  - Set in .env: VITE_API_BASE="http://localhost:8080"
+
+- Slice structure and best practices
+  - Co-locate feature state under src/features/<feature>/.
+  - Example: src/features/menu/
+    - menuSlice.ts: contains createSlice, async thunks with createAsyncThunk, selectors.
+    - types.ts: request/response DTOs that match service/api.yml schemas.
+  - State shape guidelines:
+    - Keep normalized maps where helpful (e.g., byId) and arrays for listings.
+    - Track loading and error flags per slice.
+  - Async thunks:
+    - Use createAsyncThunk for side effects. Return typed data; handle loading and error flags in extraReducers.
+    - Group API helpers in the slice or in a small shared API file.
+
+- Menu slice details (guided by service/api.yml)
+  - Endpoints covered:
+    - GET /api/menus (fetchMenus)
+    - GET /api/menus/{menuId} (getMenu) with optional include=items|all
+    - POST /api/menus (createMenu)
+    - PUT /api/menus/{menuId} (updateMenu)
+    - DELETE /api/menus/{menuId} (deleteMenu)
+    - GET /api/menus/{menuId}/items (fetchMenuItems)
+    - POST /api/menus/{menuId}/items (createMenuItem)
+    - PUT /api/menus/{menuId}/items/{id} (updateMenuItem)
+    - DELETE /api/menus/{menuId}/items/{id} (deleteMenuItem)
+  - State shape:
+    interface MenuState {
+      menus: MenuResponse[]
+      byId: Record<number, MenuResponse>
+      itemsByMenuId: Record<number, MenuItemResponse[]>
+      loading: boolean
+      error?: string
+    }
+  - Selectors exported:
+    - selectMenus, selectMenuById(id), selectItemsByMenuId(menuId), selectMenuLoading, selectMenuError
+
+- Example usage in a component
+  - Fetch all menus on mount and render:
+    import { useEffect } from 'react'
+    import { useAppDispatch, useAppSelector } from '../../store/hooks'
+    import { fetchMenus, selectMenus, selectMenuLoading } from './menuSlice'
+
+    export function MenuList() {
+      const dispatch = useAppDispatch()
+      const menus = useAppSelector(selectMenus)
+      const loading = useAppSelector(selectMenuLoading)
+
+      useEffect(() => { void dispatch(fetchMenus()) }, [dispatch])
+      if (loading) return <p>Loading...</p>
+      return (
+        <ul>
+          {menus.map(m => <li key={m.id}>{m.name}</li>)}
+        </ul>
+      )
+    }
+
+- Testing slices and thunks
+  - Prefer testing via components or by exercising reducers with plain actions.
+  - For thunks, you can mock fetch; or use MSW for integration-like tests in jsdom.
+
 Verified status
 - As of 2025-08-25, the client app builds, the Vitest test runner is configured (jsdom + RTL), and the example test src/App.test.tsx passes locally.
+- Redux Toolkit is configured with a Menu slice and global store. Use the examples above to add more slices.
+
+5. Routing (React Router)
+
+- We use react-router-dom v7 with BrowserRouter.
+- Router is initialized in src/main.tsx surrounding <App />.
+- Routes are declared in src/App.tsx:
+  - "/" → LandingPage (src/pages/LandingPage.tsx)
+  - "/menus" → MenuListPage (src/pages/MenuListPage.tsx) – lists menu titles and links to details.
+  - "/menus/new" → NewMenuPage (src/pages/NewMenuPage.tsx) – create a new menu and redirect to edit items.
+  - "/menus/:id" → MenuDetailPage (src/pages/MenuDetailPage.tsx) – fetches and displays a full menu (with items).
+  - "/menus/:id/edit" → MenuEditPage (src/pages/MenuEditPage.tsx) – add, edit, and remove items in a menu.
+- Navigation helpers: use <Link> for client-side navigation; use useParams to read route params.
+- Data flow:
+  - MenuListPage dispatches fetchMenus on mount if menus are not loaded, renders titles with links, and provides a link to create a new menu.
+  - NewMenuPage dispatches createMenu and navigates to /menus/:id/edit on success.
+  - MenuDetailPage reads the id param, dispatches getMenu({ include: 'all' }) if details aren’t present, and renders menu description and items. It also provides a Delete Menu button that confirms, deletes the menu (and its items), and navigates back to the list.
+  - MenuEditPage reads the id param, fetches the full menu if needed, and uses thunks createMenuItem, updateMenuItem, deleteMenuItem to mutate items.
+ - API base URL for fetches comes from VITE_API_BASE (default http://0.0.0.0:8080 in the slice helper).

@@ -4,8 +4,6 @@ import {
   HttpNotFoundError,
   HttpQueries,
   HttpQuery,
-  HttpRequest,
-  HttpResponse,
 } from "@deepkit/http";
 import {
   CreateMenuItemRequest,
@@ -20,7 +18,6 @@ import {
 import { Menu } from "../domain/menu";
 import { MenuItem } from "../domain/menu-Item";
 import { MenuDatabase } from "../data/database";
-import { BaseController } from "./base-controller";
 
 function toMenuResponse(m: Menu, items?: MenuItem[]): MenuResponse {
   const res: MenuResponse = {
@@ -45,11 +42,10 @@ function toMenuItemResponse(i: MenuItem): MenuItemResponse {
 }
 
 @http.controller("/api/menus")
-export class MenuController extends BaseController {
-  constructor(private db: MenuDatabase) {
-    super();
-  }
+export class MenuController {
+  constructor(private db: MenuDatabase) {}
 
+  @http.OPTIONS("")
   @http.GET("")
   async list(query: HttpQueries<PaginationQuery>) {
     const limit = Math.min(Math.max(query.limit ?? 25, 1), 100);
@@ -59,6 +55,7 @@ export class MenuController extends BaseController {
     return items.map((m) => toMenuResponse(m));
   }
 
+  @http.OPTIONS("/:menuId")
   @http.GET("/:menuId")
   async detail(menuId: number, include?: HttpQuery<IncludeParam>) {
     const session = this.db.createSession();
@@ -74,6 +71,7 @@ export class MenuController extends BaseController {
     return toMenuResponse(menu);
   }
 
+  @http.OPTIONS("")
   @http.POST("")
   async create(body: HttpBody<CreateMenuRequest>) {
     const session = this.db.createSession();
@@ -86,6 +84,7 @@ export class MenuController extends BaseController {
     return toMenuResponse(menu);
   }
 
+  @http.OPTIONS("/:menuId")
   @http.PUT("/:menuId")
   async update(menuId: number, body: HttpBody<UpdateMenuRequest>) {
     const session = this.db.createSession();
@@ -100,6 +99,7 @@ export class MenuController extends BaseController {
     return toMenuResponse(menu);
   }
 
+  @http.OPTIONS("/:menuId")
   @http.DELETE("/:menuId")
   async remove(menuId: number) {
     const session = this.db.createSession();
@@ -113,6 +113,7 @@ export class MenuController extends BaseController {
   }
 
   // Menu Items
+  @http.OPTIONS("/:menuId/items")
   @http.GET("/:menuId/items")
   async listItems(menuId: number, query?: HttpQueries<PaginationQuery>) {
     const limit = Math.min(Math.max(query?.limit ?? 25, 1), 100);
@@ -131,6 +132,7 @@ export class MenuController extends BaseController {
     return rows.map(toMenuItemResponse);
   }
 
+  @http.OPTIONS("/:menuId/items/:id")
   @http.GET("/:menuId/items/:id")
   async itemDetail(id: number) {
     const session = this.db.createSession();
@@ -142,6 +144,7 @@ export class MenuController extends BaseController {
     return toMenuItemResponse(item);
   }
 
+  @http.OPTIONS("/:menuId/items")
   @http.POST("/:menuId/items")
   async createItem(menuId: number, body: HttpBody<CreateMenuItemRequest>) {
     const session = this.db.createSession();
@@ -161,6 +164,7 @@ export class MenuController extends BaseController {
     return toMenuItemResponse(item);
   }
 
+  @http.OPTIONS("/:menuId/items/:id")
   @http.PUT("/:menuId/items/:id")
   async updateItem(
     menuId: number,
@@ -180,6 +184,7 @@ export class MenuController extends BaseController {
     return toMenuItemResponse(item);
   }
 
+  @http.OPTIONS("/:menuId/items/:id")
   @http.DELETE("/:menuId/items/:id")
   async deleteItem(menuId: number, id: number) {
     const session = this.db.createSession();
